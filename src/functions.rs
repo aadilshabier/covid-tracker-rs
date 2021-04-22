@@ -69,11 +69,11 @@ pub fn reorder_data(cases_vec: Vec<HashMap<String, String>>) -> HashMap<String, 
 
 fn format_num(mut num_string: String) -> String {
     let length = num_string.len();
-        for i in (1..length).rev() {
-            if (length - i) % 3 == 0 {
-                num_string.insert(i, ',');
-            }
+    for i in (1..length).rev() {
+        if (length - i) % 3 == 0 {
+            num_string.insert(i, ',');
         }
+    }
 
     num_string
 }

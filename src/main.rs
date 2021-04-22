@@ -2,8 +2,8 @@ mod functions;
 
 use chrono::Local;
 use error_chain::error_chain;
-use io::Write;
 use functions::{best_string_match, reorder_data};
+use io::Write;
 use std::collections::HashMap;
 use std::fs;
 use std::io;
@@ -18,8 +18,8 @@ error_chain! {
 
 const URL: &str = "https://api.covid19india.org/states_daily.json";
 
-const CACHEDIR: &str = "cache/cache.json";
-const DATADIR: &str = "cache/states_daily.json";
+const CACHEDIR: &str = "~/.cache/covid_tracker/cache.json";
+const DATADIR: &str = "~/.cache/covid_tracker/states_daily.json";
 
 fn main() -> Result<()> {
     let today = Local::today().format("%Y-%m-%d").to_string();

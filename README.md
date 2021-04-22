@@ -18,7 +18,7 @@ A command line tool written in Rust to view COVID-19 statistics in India.
     ```bash
     $ cargo build --release
     ```
-1. The executable `formatter-rs` in target/release/ can now be run as a standalone program.
+1. The binary `covid` in target/release/ can now be run
 
 
 ### API:
