@@ -17,15 +17,18 @@ error_chain! {
 }
 
 const URL: &str = "https://api.covid19india.org/states_daily.json";
+const HOME: &str = std::env!("HOME");
 
-const CACHEDIR: &str = "~/.cache/covid_tracker/cache.json";
-const DATADIR: &str = "~/.cache/covid_tracker/states_daily.json";
 
 fn main() -> Result<()> {
+
+    let cachedir = format!("{}.cache/covid_tracker/cache.json", HOME);
+    let datadir = format!("{}.cache/covid_tracker/states_daily.json", HOME);
+
     let today = Local::today().format("%Y-%m-%d").to_string();
 
     // load cache from the cache directory or load a default
-    let contents = fs::read_to_string(CACHEDIR)?;
+    let contents = fs::read_to_string(&cachedir)?;
     let mut cache: HashMap<String, String> = serde_json::from_str(&contents).unwrap_or_else(|_| {
         let mut result = HashMap::new();
         result.insert("last_loaded".to_string(), "".to_string());
@@ -37,7 +40,7 @@ fn main() -> Result<()> {
 
     if cache["last_loaded"] == today {
         // Downloads json if file not found
-        let contents = fs::read_to_string(DATADIR)?;
+        let contents = fs::read_to_string(&datadir)?;
         states_daily = serde_json::from_str(&contents)
             .unwrap_or_else(|_| reqwest::blocking::get(URL).unwrap().json().unwrap());
     } else {
@@ -54,7 +57,7 @@ fn main() -> Result<()> {
     *cache
         .entry("last_loaded".to_string())
         .or_insert("".to_string()) = last_loaded.clone();
-    fs::write(CACHEDIR, serde_json::to_string_pretty(&cache).unwrap())?;
+    fs::write(&cachedir, serde_json::to_string_pretty(&cache).unwrap())?;
 
     let todays_cases = reorder_data(todays_cases);
 
