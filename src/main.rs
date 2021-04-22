@@ -1,9 +1,9 @@
-mod lib;
+mod functions;
 
 use chrono::Local;
 use error_chain::error_chain;
 use io::Write;
-use lib::{best_string_match, reorder_data};
+use functions::{best_string_match, reorder_data};
 use std::collections::HashMap;
 use std::fs;
 use std::io;

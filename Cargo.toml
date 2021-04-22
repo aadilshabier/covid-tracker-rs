@@ -1,5 +1,5 @@
 [package]
-name = "covid-tracker-india"
+name = "covid-tracker-rs"
 version = "0.1.0"
 authors = ["Mohammad Aadil Shabier <aadilshabier1@gmail.com>"]
 edition = "2018"
