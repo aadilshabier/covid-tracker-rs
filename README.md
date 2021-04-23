@@ -18,10 +18,17 @@ A command line tool written in Rust to view COVID-19 statistics in India.
     ```bash
     $ cargo build --release
     ```
-1. The binary `covid` in target/release/ can now be run
+1. The binary `covid` in 'target/release/' can now be run
 
+1. On Unix machines you can run `install.sh` to copy the binary to `/usr/local/bin/`, and `uninstall.sh` to remove it
+
+    __Note:__ Requires sudo permissions
 
 ### API:
 
 https://api.covid19india.org
+
+### TODO:
+
+Better string similarity algorithm
 

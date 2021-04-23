@@ -117,7 +117,7 @@ fn unabbrevate(abbrev: String) -> String {
         "tt" => "Total".to_string(),
         "un" => "Unknown".to_string(),
         "up" => "Uttar Pradesh".to_string(),
-        "ut" => "Uttarakhan".to_string(),
+        "ut" => "Uttarakhand".to_string(),
         "wb" => "West Bengal".to_string(),
         _ => "".to_string(),
     }
