@@ -1,13 +1,11 @@
+use std::cmp::min;
 use std::collections::hash_map::Keys;
 use std::collections::HashMap;
 
-pub fn best_string_match(elem: &str, items: Keys<String, [String; 3]>) -> String {
-    let elem_counter = &(as_counter(elem));
+pub fn best_string_match<T>(elem: &str, items: Keys<String, T>) -> String {
     items
         .reduce(|x, y| {
-            if hmap_similarity(&as_counter(x), elem_counter)
-                > hmap_similarity(&as_counter(y), elem_counter)
-            {
+            if edit_distance(x, elem) < edit_distance(y, elem) {
                 x
             } else {
                 y
@@ -17,26 +15,27 @@ pub fn best_string_match(elem: &str, items: Keys<String, [String; 3]>) -> String
         .to_string()
 }
 
-fn as_counter(string: &str) -> HashMap<char, usize> {
-    let mut result = HashMap::new();
-
-    string.chars().for_each(|chr| {
-        *result.entry(chr).or_default() += 1;
-    });
-
-    result
-}
-
-fn hmap_similarity(hmap1: &HashMap<char, usize>, hmap2: &HashMap<char, usize>) -> f32 {
-    let numerator: usize = hmap1
-        .iter()
-        .map(|(k, v)| (*v) * (*hmap2.get(k).unwrap_or(&0)))
-        .sum();
-    let denominator = ((hmap1.values().map(|x| (*x).pow(2)).sum::<usize>()
-        * hmap2.values().map(|x| (*x).pow(2)).sum::<usize>()) as f32)
-        .sqrt();
-
-    numerator as f32 / denominator
+pub fn edit_distance(str_a: &str, str_b: &str) -> u32 {
+    // distances[i][j] = distance between a[..i] and b[..j]
+    let mut distances = vec![vec![0; str_b.len() + 1]; str_a.len() + 1];
+    // Initialize cases in which one string is empty
+    for j in 0..=str_b.len() {
+        distances[0][j] = j as u32;
+    }
+    for (i, item) in distances.iter_mut().enumerate() {
+        item[0] = i as u32;
+    }
+    for i in 1..=str_a.len() {
+        for j in 1..=str_b.len() {
+            distances[i][j] = min(distances[i - 1][j] + 1, distances[i][j - 1] + 1);
+            if str_a.as_bytes()[i - 1] == str_b.as_bytes()[j - 1] {
+                distances[i][j] = min(distances[i][j], distances[i - 1][j - 1]);
+            } else {
+                distances[i][j] = min(distances[i][j], distances[i - 1][j - 1] + 1);
+            }
+        }
+    }
+    distances[str_a.len()][str_b.len()]
 }
 
 // convert to vector containing values like
@@ -50,24 +49,19 @@ pub fn reorder_data(cases_vec: Vec<HashMap<String, String>>) -> HashMap<String, 
         let status = cases.remove("status").unwrap();
 
         for (state, value) in cases {
-            match status.as_str() {
-                "Confirmed" => {
-                    (*result.entry(unabbrevate(state)).or_default())[0] = format_num(value);
-                }
-                "Recovered" => {
-                    (*result.entry(unabbrevate(state)).or_default())[1] = format_num(value);
-                }
-                "Deceased" => {
-                    (*result.entry(unabbrevate(state)).or_default())[2] = format_num(value);
-                }
-                _ => {}
-            };
+            (*result.entry(unabbrevate(state)).or_default())[match status.as_str() {
+                "Confirmed" => 0,
+                "Recovered" => 1,
+                "Deceased" => 2,
+                _ => panic!("This shouldn't have happened"),
+            }] = format_num_string(value);
         }
     }
     result
 }
 
-fn format_num(mut num_string: String) -> String {
+#[inline]
+fn format_num_string(mut num_string: String) -> String {
     let length = num_string.len();
     for i in (1..length).rev() {
         if (length - i) % 3 == 0 {
@@ -80,47 +74,48 @@ fn format_num(mut num_string: String) -> String {
 
 fn unabbrevate(abbrev: String) -> String {
     match abbrev.as_str() {
-        "an" => "Andaman and Nicobar".to_string(),
-        "ap" => "Andhra Pradesh".to_string(),
-        "ar" => "Arunachal Pradesh".to_string(),
-        "as" => "Assam".to_string(),
-        "br" => "Bihar".to_string(),
-        "ch" => "Chandigarh".to_string(),
-        "ct" => "Chattisgarh".to_string(),
-        "dd" => "Daman and Diu".to_string(),
-        "dl" => "Delhi".to_string(),
-        "dn" => "Dadra and Nagar Haveli".to_string(),
-        "ga" => "Goa".to_string(),
-        "gj" => "Gujarat".to_string(),
-        "hp" => "Himachal Pradesh".to_string(),
-        "hr" => "Haryana".to_string(),
-        "jh" => "Jharkhand".to_string(),
-        "jk" => "Jammu and Kashmir".to_string(),
-        "ka" => "Karnataka".to_string(),
-        "kl" => "Kerala".to_string(),
-        "la" => "Lakshwadeep".to_string(),
-        "ld" => "Ladakh".to_string(),
-        "mh" => "Maharashtra".to_string(),
-        "ml" => "Meghalaya".to_string(),
-        "mn" => "Manipur".to_string(),
-        "mp" => "Madhya Pradesh".to_string(),
-        "mz" => "Mizoram".to_string(),
-        "nl" => "Nagaland".to_string(),
-        "or" => "Odisha".to_string(),
-        "pb" => "Punjab".to_string(),
-        "py" => "Puducherry".to_string(),
-        "rj" => "Rajasthan".to_string(),
-        "sk" => "Sikkim".to_string(),
-        "tg" => "Telengana".to_string(),
-        "tn" => "Tamil Nadu".to_string(),
-        "tr" => "Tripura".to_string(),
-        "tt" => "Total".to_string(),
-        "un" => "Unknown".to_string(),
-        "up" => "Uttar Pradesh".to_string(),
-        "ut" => "Uttarakhand".to_string(),
-        "wb" => "West Bengal".to_string(),
-        _ => "".to_string(),
+        "an" => "Andaman and Nicobar",
+        "ap" => "Andhra Pradesh",
+        "ar" => "Arunachal Pradesh",
+        "as" => "Assam",
+        "br" => "Bihar",
+        "ch" => "Chandigarh",
+        "ct" => "Chattisgarh",
+        "dd" => "Daman and Diu",
+        "dl" => "Delhi",
+        "dn" => "Dadra and Nagar Haveli",
+        "ga" => "Goa",
+        "gj" => "Gujarat",
+        "hp" => "Himachal Pradesh",
+        "hr" => "Haryana",
+        "jh" => "Jharkhand",
+        "jk" => "Jammu and Kashmir",
+        "ka" => "Karnataka",
+        "kl" => "Kerala",
+        "la" => "Lakshwadeep",
+        "ld" => "Ladakh",
+        "mh" => "Maharashtra",
+        "ml" => "Meghalaya",
+        "mn" => "Manipur",
+        "mp" => "Madhya Pradesh",
+        "mz" => "Mizoram",
+        "nl" => "Nagaland",
+        "or" => "Odisha",
+        "pb" => "Punjab",
+        "py" => "Puducherry",
+        "rj" => "Rajasthan",
+        "sk" => "Sikkim",
+        "tg" => "Telengana",
+        "tn" => "Tamil Nadu",
+        "tr" => "Tripura",
+        "tt" => "Total",
+        "un" => "Unknown",
+        "up" => "Uttar Pradesh",
+        "ut" => "Uttarakhand",
+        "wb" => "West Bengal",
+        _ => "",
     }
+    .to_string()
 }
 
 #[cfg(test)]
@@ -129,18 +124,44 @@ mod tests {
 
     #[test]
     fn test_format_num1() {
-        assert_eq!("12,322,333".to_string(), format_num("12322333".to_string()));
+        assert_eq!(
+            "12,322,333".to_string(),
+            format_num_string("12322333".to_string())
+        );
     }
     #[test]
     fn test_format_num2() {
-        assert_eq!("2,333".to_string(), format_num("2333".to_string()));
+        assert_eq!("2,333".to_string(), format_num_string("2333".to_string()));
     }
     #[test]
     fn test_format_num3() {
-        assert_eq!("333".to_string(), format_num("333".to_string()));
+        assert_eq!("333".to_string(), format_num_string("333".to_string()));
     }
     #[test]
     fn test_format_num4() {
-        assert_eq!("322,333".to_string(), format_num("322333".to_string()));
+        assert_eq!(
+            "322,333".to_string(),
+            format_num_string("322333".to_string())
+        );
+    }
+
+    #[test]
+    fn equal_strings() {
+        assert_eq!(0, edit_distance("Hello, world!", "Hello, world!"));
+        assert_eq!(0, edit_distance("Test_Case_#1", "Test_Case_#1"));
+    }
+
+    #[test]
+    fn one_edit_difference() {
+        assert_eq!(1, edit_distance("Hello, world!", "Hell, world!"));
+        assert_eq!(1, edit_distance("Test_Case_#1", "Test_Case_#2"));
+        assert_eq!(1, edit_distance("Test_Case_#1", "Test_Case_#10"));
+    }
+
+    #[test]
+    fn several_differences() {
+        assert_eq!(2, edit_distance("My Cat", "My Case"));
+        assert_eq!(7, edit_distance("Hello, world!", "Goodbye, world!"));
+        assert_eq!(6, edit_distance("Test_Case_#3", "Case #3"));
     }
 }
